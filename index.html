@@ -84,7 +84,7 @@ Papa.parse('分析用_成績.csv',{
     const bgSets = res.data
       .filter(r=>r['10公尺速率'])            // 避免空行
       .map(r=>{
-        const col = r['性別']==='男' ? 'rgba(0,123,255,.25)' : 'rgba(220,53,69,.25)';
+        const col = r['性別']==='男' ? 'rgba(0,123,255,.15)' : 'rgba(220,53,69,.15)';
         return {
           order: 0,
           data:[
@@ -143,23 +143,24 @@ function calc(){
      V30 = ${v30.toFixed(3)} m/s<br>
      <strong>預測 100 m 成績：${pred.toFixed(2)} 秒</strong>`;
 
-  /* 移除舊 user 線再加新線 */
- chart.data.datasets = chart.data.datasets.filter(ds => ds.label !== 'user');
+/* 移除舊 user 線再加新線 */
+chart.data.datasets = chart.data.datasets.filter(ds => ds.label !== 'user');
 chart.data.datasets.push({
   label: 'user',
-  order: 100,
+  order: 999,                       // 最大，最後畫
   data: [
     {x: 0,   y: 0},
     {x: 10,  y: v10},
     {x: 21.5,y: v215},
     {x: 30,  y: v30}
   ],
-  borderColor: '#FFD700',          // 線條顏色
-  backgroundColor: '#FFD700',      // 線以下填色 (不填其實也可以)
-  pointBorderColor: '#FFD700',     // 點外框
-  pointBackgroundColor: '#FFD700', // 點填色
-  borderWidth: 5,
-  pointRadius: 8,
+  borderColor: '#FFFF00',           // 純亮黃
+  backgroundColor: '#FFFF00',
+  pointBorderColor: '#FFFF00',
+  pointBackgroundColor: '#FFFF00',
+  borderWidth: 8,                   // 很粗
+  pointRadius: 10,                  // 很大
+  borderDash: [6,2],                // (可選) 讓線條虛線更醒目
   showLine: true,
   tension: 0
 });
