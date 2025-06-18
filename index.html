@@ -146,17 +146,18 @@ function calc(){
   chart.data.datasets = chart.data.datasets.filter(ds=>ds.label!=='user');
   chart.data.datasets.push({
     label:'user',
+    order: 99, 
     data:[
       {x:0,   y:0},
       {x:10,  y:v10},
       {x:21.5,y:v215},
       {x:30,  y:v30}
     ],
-    borderColor:'gold',
-    backgroundColor:'gold',
+    borderColor:'FFA500',
+    backgroundColor:'FFA500',
     borderWidth:2.5,
     showLine:true,
-    pointRadius:5,
+    pointRadius:7,
     tension:0
   });
   chart.update();
