@@ -84,7 +84,7 @@ Papa.parse('分析用_成績.csv',{
     const bgSets = res.data
       .filter(r=>r['10公尺速率'])            // 避免空行
       .map(r=>{
-        const col = r['性別']==='男' ? 'rgba(0,123,255,.20)' : 'rgba(220,53,69,.20)';
+        const col = r['性別']==='男' ? 'rgba(0,123,255,.25)' : 'rgba(220,53,69,.25)';
         return {
           order: 0,
           data:[
@@ -147,15 +147,15 @@ function calc(){
   chart.data.datasets = chart.data.datasets.filter(ds=>ds.label!=='user');
   chart.data.datasets.push({
     label:'user',
-    order: 100, 
+    order: 99, 
     data:[
       {x:0,   y:0},
       {x:10,  y:v10},
       {x:21.5,y:v215},
       {x:30,  y:v30}
     ],
-    borderColor:'##FFA500',
-    backgroundColor:'##FFA500',
+    borderColor:'#FFD700',
+    backgroundColor:'#FFD700',
     borderWidth:5,
     showLine:true,
     pointRadius:7,
