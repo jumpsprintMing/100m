@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>100 m 成績預測器</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 讀 CSV -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+body{font-family:"Microsoft JhengHei",Arial,Helvetica,sans-serif;margin:1.2rem;line-height:1.65}
+h2{margin-top:0}
+fieldset{margin:0 0 1rem;padding:.8rem;border:1px solid #ccc}
+input{width:90px;padding:4px}
+label{margin-right:.6rem}
+button{padding:.4rem 1rem}
+#result{margin-top:1rem;font-size:1.1rem}
+#chartBox{max-width:900px}
+footer{margin-top:1.5rem;color:#666}
+.intro{background:#f6f8fa;padding:1rem;border-left:4px solid #2c7be5;margin-bottom:1.2rem}
+</style>
+</head>
+<body>
+
+<h2>100 m 成績預測器</h2>
+
+<div class="intro">
+<p>大家好，我是熱愛田徑的<strong>智明</strong>！<br>
+這個網頁是一個小小的成績預測器，是我根據自己的研究和統計資料所設計的，專門針對臺灣本土選手打造的 100 公尺預測模型。透過統計分析，具有一定的精準度。<br>
+只要輸入自己在 <strong>30 m 內三個通過距離</strong>（10 m、21.5 m、30 m）所花的<strong>總時間</strong>，網站就會自動幫你預測完整的 100 m 成績，並用<strong>黃色</strong>標出你的速度曲線。<br>
+下方圖表是我整理的 <strong>114 年全中運</strong> 100 m 準決賽與決賽選手速度變化圖，<span style="color:#007bff">藍色代表男生</span>、<span style="color:#dc3545">紅色代表女生</span>。歡迎比較看看哪一段還有進步空間！<br>
+祝大家訓練順利！如有興趣交流，歡迎寫信給我 📧 eric8411111500@gmail.com
+</p>
+</div>
+
+<form id="predictForm">
+  <fieldset>
+    <legend>通過輸入距離所用總時間（秒）</legend>
+    <label>10 m <input type="number" step="0.001" id="t10" required></label>
+    <label>21.5 m <input type="number" step="0.001" id="t215" required></label>
+    <label>30 m <input type="number" step="0.001" id="t30" required></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>性別</legend>
+    <label><input type="radio" name="gender" value="1" required> 男</label>
+    <label><input type="radio" name="gender" value="0"> 女</label>
+  </fieldset>
+
+  <button type="button" onclick="calc()">計算</button>
+</form>
+
+<div id="result"></div>
+
+<div id="chartBox">
+  <canvas id="speedChart"></canvas>
+</div>
+
+<footer>作者：國立成功大學_蔡智明</footer>
+
+<script>
+/* ---------- 全域變數 ---------- */
+let chart;
+
+/* ---------- 讀取 CSV 並畫背景曲線 ---------- */
+Papa.parse('分析用_成績.csv',{
+  download:true,
+  header:true,
+  complete: res=>{
+    const bgSets = res.data
+      .filter(r=>r['10公尺速率'])            // 避免空行
+      .map(r=>{
+        const col = r['性別']==='男' ? 'rgba(0,123,255,.35)' : 'rgba(220,53,69,.35)';
+        return {
+          data:[
+            {x:0,   y:+r['0公尺速率']},
+            {x:10,  y:+r['10公尺速率']},
+            {x:21.5,y:+r['21.5公尺速率']},
+            {x:30,  y:+r['30公尺速率']}
+          ],
+          borderColor:col,
+          borderWidth:1,
+          showLine:true,
+          pointRadius:0,
+          tension:0
+        };
+      });
+    initChart(bgSets);
+  }
+});
+
+/* ---------- 初始化 Chart ---------- */
+function initChart(bgDatasets){
+  const ctx=document.getElementById('speedChart');
+  chart = new Chart(ctx,{
+    type:'scatter',
+    data:{datasets:bgDatasets},
+    options:{
+      maintainAspectRatio:false,
+      scales:{
+        x:{title:{display:true,text:'Distance (m)'},min:0,max:30},
+        y:{title:{display:true,text:'Speed (m/s)'},min:0,max:12}
+      },
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+/* ---------- 輸入後計算 & 疊加黃色個人線 ---------- */
+function calc(){
+  const t10  = parseFloat(document.getElementById('t10').value);
+  const t215 = parseFloat(document.getElementById('t215').value);
+  const t30  = parseFloat(document.getElementById('t30').value);
+  const gEl  = document.querySelector('input[name="gender"]:checked');
+  if(!(t10>0 && t215>t10 && t30>t215)){alert('時間需遞增且大於 0');return;}
+  if(!gEl){alert('請選擇性別');return;}
+  const sex  = +gEl.value;
+
+  const v10   = 10   / t10;
+  const v215  = 11.5 / (t215 - t10);
+  const v30   = 8.5  / (t30 - t215);
+
+  const pred = 23.852 -0.801*v10 -0.435*v215 -0.47*v30 -0.248*sex;
+
+  document.getElementById('result').innerHTML =
+    `V10 = ${v10.toFixed(3)} m/s&nbsp;&nbsp;
+     V21.5 = ${v215.toFixed(3)} m/s&nbsp;&nbsp;
+     V30 = ${v30.toFixed(3)} m/s<br>
+     <strong>預測 100 m 成績：${pred.toFixed(2)} 秒</strong>`;
+
+  /* 移除舊 user 線再加新線 */
+  chart.data.datasets = chart.data.datasets.filter(ds=>ds.label!=='user');
+  chart.data.datasets.push({
+    label:'user',
+    data:[
+      {x:0,   y:0},
+      {x:10,  y:v10},
+      {x:21.5,y:v215},
+      {x:30,  y:v30}
+    ],
+    borderColor:'gold',
+    backgroundColor:'gold',
+    borderWidth:2.5,
+    showLine:true,
+    pointRadius:5,
+    tension:0
+  });
+  chart.update();
+}
+</script>
+</body>
+</html>
