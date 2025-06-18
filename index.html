@@ -144,24 +144,26 @@ function calc(){
      <strong>預測 100 m 成績：${pred.toFixed(2)} 秒</strong>`;
 
   /* 移除舊 user 線再加新線 */
-  chart.data.datasets = chart.data.datasets.filter(ds=>ds.label!=='user');
-  chart.data.datasets.push({
-    label:'user',
-    order: 99, 
-    data:[
-      {x:0,   y:0},
-      {x:10,  y:v10},
-      {x:21.5,y:v215},
-      {x:30,  y:v30}
-    ],
-    borderColor:'#FFD700',
-    backgroundColor:'#FFD700',
-    borderWidth:5,
-    showLine:true,
-    pointRadius:7,
-    tension:0
-  });
-  chart.update();
+ chart.data.datasets = chart.data.datasets.filter(ds => ds.label !== 'user');
+chart.data.datasets.push({
+  label: 'user',
+  order: 100,
+  data: [
+    {x: 0,   y: 0},
+    {x: 10,  y: v10},
+    {x: 21.5,y: v215},
+    {x: 30,  y: v30}
+  ],
+  borderColor: '#FFD700',          // 線條顏色
+  backgroundColor: '#FFD700',      // 線以下填色 (不填其實也可以)
+  pointBorderColor: '#FFD700',     // 點外框
+  pointBackgroundColor: '#FFD700', // 點填色
+  borderWidth: 5,
+  pointRadius: 8,
+  showLine: true,
+  tension: 0
+});
+chart.update();
 }
 </script>
 </body>
