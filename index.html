@@ -16,7 +16,20 @@ input{width:90px;padding:4px}
 label{margin-right:.6rem}
 button{padding:.4rem 1rem}
 #result{margin-top:1rem;font-size:1.1rem}
-#chartBox{max-width:900px}
+#chartBox{            /* 圖表外框 */
+  position:relative;
+  max-width:900px;    /* 你可改更寬 */
+  width:100%;
+  height:0;
+  padding-bottom:56.25%;  /* 16:9 → 9/16 = 0.5625 = 56.25% */
+}
+/* 讓 <canvas> 填滿容器 */
+#chartBox canvas{
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+}
+</style>
 footer{margin-top:1.5rem;color:#666}
 .intro{background:#f6f8fa;padding:1rem;border-left:4px solid #2c7be5;margin-bottom:1.2rem}
 </style>
