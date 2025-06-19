@@ -162,12 +162,11 @@ function calc(){
   const v215 = 11.5 / (t215 - t10);
   const v30  =  8.5 / (t30  - t215);
 
-  /* 速率合理性檢查 */
-  const minV = 5, maxV = 13;
-  if([v10,v215,v30].some(v=>v<minV||v>maxV)){
-    err.textContent='請確認輸入時間是否正確（速率異常）';
-    return;
-  }
+// 判斷速度是否合理（可根據你的選手水平自訂上下限）
+if (v10 < 3 || v10 > 8 || v215 < 4 || v215 > 12 || v30 < 5 || v30 > 12) {
+  alert('請確認輸入時間是否正確（超出合理計算範圍）');
+  return;
+}
 
   /* 預測成績 */
   const sex  = +gEl.value;
