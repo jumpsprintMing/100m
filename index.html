@@ -5,32 +5,20 @@
 <title>100 m 成績預測器</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- 讀 CSV -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
 body{font-family:"Microsoft JhengHei",Arial,Helvetica,sans-serif;margin:1.2rem;line-height:1.65}
 h2{margin-top:0}
-
 fieldset{margin:0 0 1rem;padding:.8rem;border:1px solid #ccc}
 input{width:90px;padding:4px}
 label{margin-right:.6rem}
 button{padding:.4rem 1rem}
-
 #result{margin-top:1rem;font-size:1.1rem}
 #errorMsg{color:#d9534f;font-weight:bold;margin-top:1rem}
-
-#chartBox{
-  position:relative;
-  max-width:900px;
-  width:100%;
-  height:0;
-  padding-bottom:56.25%;
-}
+#chartBox{position:relative;max-width:900px;width:100%;height:0;padding-bottom:56.25%}
 #chartBox canvas{position:absolute;top:0;left:0;width:100%;height:100%}
-
 footer{margin-top:1.5rem;color:#666}
 .intro{background:#f6f8fa;padding:1rem;border-left:4px solid #2c7be5;margin-bottom:1.2rem}
 </style>
@@ -48,18 +36,17 @@ footer{margin-top:1.5rem;color:#666}
 </p>
 
 <p><strong>使用方法補充說明：</strong><br>
-本研究所使用之 10 m、21.5 m 與 30 m 測量點，皆對應於田徑場上國際統一設置之標記點，位置如下：
+本研究所使用之 10 m、21.5 m 與 30 m 測量點皆為國際統一標記：
 <ul>
   <li>10 m：接力區後線</li>
-  <li>21.5 m：女子 100 m 欄第二個欄架位置（第二個黃點）</li>
-  <li>30 m：女子 100 m 欄第三個欄架位置（第三個黃點）</li>
+  <li>21.5 m：女子 100 m 欄第二個欄架位置</li>
+  <li>30 m：女子 100 m 欄第三個欄架位置</li>
 </ul>
-因此無須額外丈量或設備，僅需以鞋子或水壺作為臨時標記，即可準確辨識位置。
-</p>
+因此無須額外丈量，只需以鞋子或水壺臨時標記。</p>
 
 <div style="text-align:center;margin-top:1rem">
   <img src="/100m/marker.png" alt="場地標記示意圖" style="max-width:100%;height:auto;border:1px solid #ccc;padding:4px">
-  <p style="color:#666;font-size:0.9rem">圖示：以鞋子、水壺標記 10 m / 21.5 m / 30 m 位置（攝於實際場地）</p>
+  <p style="color:#666;font-size:0.9rem">圖示：以鞋子、水壺標記 10 m / 21.5 m / 30 m 位置</p>
 </div>
 </div>
 
@@ -90,7 +77,7 @@ footer{margin-top:1.5rem;color:#666}
 <script>
 let chart;
 
-/* ---------- 讀取 CSV 並畫背景曲線 ---------- */
+/* 讀取 CSV 畫背景曲線 */
 Papa.parse('分析用_成績.csv',{
   download:true,
   header:true,
@@ -118,10 +105,8 @@ Papa.parse('分析用_成績.csv',{
   }
 });
 
-/* ---------- 初始化 Chart ---------- */
 function initChart(bgDatasets){
-  const ctx=document.getElementById('speedChart');
-  chart = new Chart(ctx,{
+  chart = new Chart(document.getElementById('speedChart'),{
     type:'scatter',
     data:{datasets:bgDatasets},
     options:{
@@ -135,7 +120,6 @@ function initChart(bgDatasets){
   });
 }
 
-/* ---------- 計算 & 疊黃線 ---------- */
 function calc(){
   const t10  = parseFloat(document.getElementById('t10').value);
   const t215 = parseFloat(document.getElementById('t215').value);
@@ -144,37 +128,26 @@ function calc(){
   const err  = document.getElementById('errorMsg');
   const res  = document.getElementById('result');
 
-  err.textContent = '';
-  res.textContent = '';
+  err.textContent=''; res.textContent='';
 
-  /* 基本時間檢查 */
   if(!(t10>0 && t215>t10 && t30>t215)){
-    err.textContent='請輸入遞增且合理的時間值';
-    return;
+    err.textContent='請輸入遞增且合理的時間值'; return;
   }
-  if(!gEl){
-    err.textContent='請選擇性別';
-    return;
-  }
+  if(!gEl){err.textContent='請選擇性別'; return;}
 
-  /* 速率計算 */
   const v10  = 10   / t10;
   const v215 = 11.5 / (t215 - t10);
   const v30  =  8.5 / (t30  - t215);
 
-// 判斷速度是否合理（可根據選手水平自訂上下限）
-if (v10 < 2 || v10 > 9 ||   // V10：2–9 m/s
-    v215 < 3 || v215 > 13 || // V21.5：3–13 m/s
-    v30 < 4 || v30 > 13) {   // V30：4–13 m/s
-  alert('請確認輸入時間是否正確（超出合理計算範圍）');
-  return;
-}
+  /* 速率範圍檢查 (V10:2–9, V21.5:3–13, V30:4–13) */
+  if(v10<2||v10>9||v215<3||v215>13||v30<4||v30>13){
+    err.textContent='請確認輸入時間是否正確（速率異常）';
+    return;
+  }
 
-  /* 預測成績 */
-  const sex  = +gEl.value;
-  const pred = 23.852 -0.801*v10 -0.435*v215 -0.47*v30 -0.248*sex;
+  const sex = +gEl.value;
+  const pred= 23.852 -0.801*v10 -0.435*v215 -0.47*v30 -0.248*sex;
 
-  /* 顯示結果與警語 */
   res.innerHTML =
     `V10 = ${v10.toFixed(3)} m/s&nbsp;&nbsp;
      V21.5 = ${v215.toFixed(3)} m/s&nbsp;&nbsp;
@@ -182,25 +155,13 @@ if (v10 < 2 || v10 > 9 ||   // V10：2–9 m/s
      <strong>預測 100 m 成績：${pred.toFixed(2)} 秒</strong><br>
      <span style="color:#d9534f;font-size:0.9rem;">此預測成績僅供參考，請以 V-t 圖比較作為訓練參考</span>`;
 
-  /* 更新黃色線 */
   chart.data.datasets = chart.data.datasets.filter(ds=>ds.label!=='user');
   chart.data.datasets.push({
-    label:'user',
-    order:100,
-    data:[
-      {x:0,y:0},
-      {x:10,y:v10},
-      {x:21.5,y:v215},
-      {x:30,y:v30}
-    ],
-    borderColor:'#FFD300',
-    backgroundColor:'#FFD300',
-    pointBorderColor:'#FFD300',
-    pointBackgroundColor:'#FFD300',
-    borderWidth:3,
-    pointRadius:4,
-    showLine:true,
-    tension:0
+    label:'user',order:100,
+    data:[{x:0,y:0},{x:10,y:v10},{x:21.5,y:v215},{x:30,y:v30}],
+    borderColor:'#FFD300',backgroundColor:'#FFD300',
+    pointBorderColor:'#FFD300',pointBackgroundColor:'#FFD300',
+    borderWidth:3,pointRadius:4,showLine:true,tension:0
   });
   chart.update();
 }
