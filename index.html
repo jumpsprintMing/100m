@@ -20,21 +20,18 @@ label{margin-right:.6rem}
 button{padding:.4rem 1rem}
 
 #result{margin-top:1rem;font-size:1.1rem}
+#errorMsg{color:#d9534f;font-weight:bold;margin-top:1rem}
 
 #chartBox{
   position:relative;
   max-width:900px;
   width:100%;
   height:0;
-  padding-bottom:56.25%;   /* 16:9 → 9/16 ≈ 0.5625 */
+  padding-bottom:56.25%;
 }
-#chartBox canvas{
-  position:absolute;
-  top:0;left:0;
-  width:100%;height:100%;
-}
+#chartBox canvas{position:absolute;top:0;left:0;width:100%;height:100%}
 
-footer{margin-top:1.5rem;color:#666}              /* ← 放回 style 區塊 */
+footer{margin-top:1.5rem;color:#666}
 .intro{background:#f6f8fa;padding:1rem;border-left:4px solid #2c7be5;margin-bottom:1.2rem}
 </style>
 </head>
@@ -51,21 +48,19 @@ footer{margin-top:1.5rem;color:#666}              /* ← 放回 style 區塊 */
 </p>
 
 <p><strong>使用方法補充說明：</strong><br>
-本研究所使用之 10 公尺、21.5 公尺與 30 公尺測量點，皆對應於田徑場上國際統一設置之標記點，位置如下：
+本研究所使用之 10 m、21.5 m 與 30 m 測量點，皆對應於田徑場上國際統一設置之標記點，位置如下：
 <ul>
-  <li>10 公尺：接力區後線</li>
-  <li>21.5 公尺：女子 100 公尺欄第二個欄架位置（第二個黃點）</li>
-  <li>30 公尺：女子 100 公尺欄第三個欄架位置（第三個黃點）</li>
+  <li>10 m：接力區後線</li>
+  <li>21.5 m：女子 100 m 欄第二個欄架位置（第二個黃點）</li>
+  <li>30 m：女子 100 m 欄第三個欄架位置（第三個黃點）</li>
 </ul>
 因此無須額外丈量或設備，僅需以鞋子或水壺作為臨時標記，即可準確辨識位置。
 </p>
 
-<!-- 加入圖片說明 -->
-<div style="text-align:center; margin-top:1rem;">
-  <img src="/100m/marker.png" alt="場地標記示意圖" style="max-width:100%; height:auto; border:1px solid #ccc; padding:4px;">
-  <p style="color:#666; font-size:0.9rem;">圖示：以鞋子、水壺標記 10m / 21.5m / 30m 位置（攝於實際場地）</p>
+<div style="text-align:center;margin-top:1rem">
+  <img src="/100m/marker.png" alt="場地標記示意圖" style="max-width:100%;height:auto;border:1px solid #ccc;padding:4px">
+  <p style="color:#666;font-size:0.9rem">圖示：以鞋子、水壺標記 10 m / 21.5 m / 30 m 位置（攝於實際場地）</p>
 </div>
-  
 </div>
 
 <form id="predictForm">
@@ -85,16 +80,14 @@ footer{margin-top:1.5rem;color:#666}              /* ← 放回 style 區塊 */
   <button type="button" onclick="calc()">計算</button>
 </form>
 
+<div id="errorMsg"></div>
 <div id="result"></div>
 
-<div id="chartBox">
-  <canvas id="speedChart"></canvas>
-</div>
+<div id="chartBox"><canvas id="speedChart"></canvas></div>
 
-<footer>作者：國立成功大學_蔡智明</footer>
+<footer>作者：國立成功大學 蔡智明</footer>
 
 <script>
-/* ---------- 全域變數 ---------- */
 let chart;
 
 /* ---------- 讀取 CSV 並畫背景曲線 ---------- */
@@ -102,25 +95,25 @@ Papa.parse('分析用_成績.csv',{
   download:true,
   header:true,
   complete: res=>{
-    const bgSets = res.data
-      .filter(r=>r['10公尺速率'])
-      .map(r=>{
-        const col = r['性別']==='男' ? 'rgba(0,123,255,.10)' : 'rgba(220,53,69,.10)';
-        return {
-          order:0,
-          data:[
-            {x:0,   y:+r['0公尺速率']},
-            {x:10,  y:+r['10公尺速率']},
-            {x:21.5,y:+r['21.5公尺速率']},
-            {x:30,  y:+r['30公尺速率']}
-          ],
-          borderColor:col,
-          borderWidth:1,
-          showLine:true,
-          pointRadius:0,
-          tension:0
-        };
-      });
+    const bgSets = res.data.filter(r=>r['10公尺速率']).map(r=>{
+      const col = r['性別']==='男'
+        ? 'rgba(0,123,255,.10)'
+        : 'rgba(220,53,69,.10)';
+      return {
+        order:0,
+        data:[
+          {x:0,y:+r['0公尺速率']},
+          {x:10,y:+r['10公尺速率']},
+          {x:21.5,y:+r['21.5公尺速率']},
+          {x:30,y:+r['30公尺速率']}
+        ],
+        borderColor:col,
+        borderWidth:1,
+        showLine:true,
+        pointRadius:0,
+        tension:0
+      };
+    });
     initChart(bgSets);
   }
 });
@@ -148,21 +141,45 @@ function calc(){
   const t215 = parseFloat(document.getElementById('t215').value);
   const t30  = parseFloat(document.getElementById('t30').value);
   const gEl  = document.querySelector('input[name="gender"]:checked');
-  if(!(t10>0 && t215>t10 && t30>t215)){alert('時間需遞增且大於 0');return;}
-  if(!gEl){alert('請選擇性別');return;}
+  const err  = document.getElementById('errorMsg');
+  const res  = document.getElementById('result');
+
+  err.textContent = '';
+  res.textContent = '';
+
+  /* 基本時間檢查 */
+  if(!(t10>0 && t215>t10 && t30>t215)){
+    err.textContent='請輸入遞增且合理的時間值';
+    return;
+  }
+  if(!gEl){
+    err.textContent='請選擇性別';
+    return;
+  }
+
+  /* 速率計算 */
+  const v10  = 10   / t10;
+  const v215 = 11.5 / (t215 - t10);
+  const v30  =  8.5 / (t30  - t215);
+
+  /* 速率合理性檢查 */
+  const minV = 5, maxV = 13;
+  if([v10,v215,v30].some(v=>v<minV||v>maxV)){
+    err.textContent='請確認輸入時間是否正確（速率異常）';
+    return;
+  }
+
+  /* 預測成績 */
   const sex  = +gEl.value;
-
-  const v10   = 10   / t10;
-  const v215  = 11.5 / (t215 - t10);
-  const v30   = 8.5  / (t30 - t215);
-
   const pred = 23.852 -0.801*v10 -0.435*v215 -0.47*v30 -0.248*sex;
 
-  document.getElementById('result').innerHTML =
+  /* 顯示結果與警語 */
+  res.innerHTML =
     `V10 = ${v10.toFixed(3)} m/s&nbsp;&nbsp;
      V21.5 = ${v215.toFixed(3)} m/s&nbsp;&nbsp;
      V30 = ${v30.toFixed(3)} m/s<br>
-     <strong>預測 100 m 成績：${pred.toFixed(2)} 秒</strong>`;
+     <strong>預測 100 m 成績：${pred.toFixed(2)} 秒</strong><br>
+     <span style="color:#d9534f;font-size:0.9rem;">此預測成績僅供參考，請以 V-t 圖比較作為訓練參考</span>`;
 
   /* 更新黃色線 */
   chart.data.datasets = chart.data.datasets.filter(ds=>ds.label!=='user');
@@ -170,10 +187,10 @@ function calc(){
     label:'user',
     order:100,
     data:[
-      {x:0,   y:0},
-      {x:10,  y:v10},
+      {x:0,y:0},
+      {x:10,y:v10},
       {x:21.5,y:v215},
-      {x:30,  y:v30}
+      {x:30,y:v30}
     ],
     borderColor:'#FFD300',
     backgroundColor:'#FFD300',
